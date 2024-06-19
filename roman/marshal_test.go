@@ -21,22 +21,12 @@ func TestMarshalText(t *testing.T) {
 		assert.Error(t, err, ErrInvalid)
 	})
 
-	t.Run("Marshal values", func(tt *testing.T) {
-		for key, val := range values {
-			r := NewRoman(key)
-
-			b, err := r.MarshalText()
-			require.NoError(t, err)
-
-			assert.Equal(t, val, string(b))
-		}
-	})
-
 	t.Run("Marshal random", func(tt *testing.T) {
 		tests := map[uint16]string{
 			11:   "XI",
 			15:   "XV",
 			27:   "XXVII",
+			49:   "XLIX",
 			1999: "MCMXCIX",
 		}
 

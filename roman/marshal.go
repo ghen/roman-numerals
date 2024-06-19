@@ -3,26 +3,18 @@ package roman
 import (
 	"bytes"
 	"errors"
+	"math"
 )
 
 // ErrInvalid indicates that operation can't be performed due to an invalid value.
 var ErrInvalid = errors.New("invalid value")
 
 var (
-	values = map[uint16]string{
-		1:    "I",
-		4:    "IV",
-		5:    "V",
-		9:    "IX",
-		10:   "X",
-		40:   "XL",
-		50:   "L",
-		90:   "XC",
-		100:  "C",
-		400:  "CD",
-		500:  "D",
-		900:  "CM",
-		1000: "M",
+	ranges = [][]string{
+		{"", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX"},
+		{"", "X", "XX", "XXX", "XL", "L", "LX", "LXX", "LXXX", "XC"},
+		{"", "C", "CC", "CCC", "CD", "D", "DC", "DCC", "DCCC", "CM"},
+		{"", "M", "MM", "MMM"},
 	}
 	alphabet = map[byte]uint16{
 		'I': 1,
@@ -44,21 +36,13 @@ func (r *Roman) MarshalText() (text []byte, err error) {
 
 	val := r.Value
 	buf := bytes.Buffer{}
-	seg := bytes.Buffer{}
-	for rng := uint16(1000); rng > 0; rng /= 10 {
-		seg.Reset()
-
-		for i := uint16(1); i <= val/rng; i += 1 {
-			if str, exist := values[i*rng]; exist {
-				seg.Reset()
-				seg.WriteString(str)
-			} else {
-				seg.WriteString(values[rng])
-			}
+	for rng := 3; rng >= 0; rng -= 1 {
+		base := uint16(math.Pow10(rng))
+		if dgt := val / base; dgt > 0 {
+			buf.WriteString(ranges[rng][dgt])
 		}
-		buf.Write(seg.Bytes())
 
-		val = val % rng
+		val = val % base
 	}
 	return buf.Bytes(), nil
 }
