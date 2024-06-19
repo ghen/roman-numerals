@@ -1,4 +1,4 @@
-module github.com/ghen/ghen/roman-numerals
+module github.com/ghen/roman-numerals
 
 go 1.22
 
