@@ -7,16 +7,7 @@ import (
 	"github.com/stretchr/testify/require"
 )
 
-func TestAlphabet(t *testing.T) {
-	for key, val := range alphabet {
-		assert.Equal(t, key, values[val])
-	}
-}
-
 func TestMarshalText(t *testing.T) {
-	var numerals = []string{
-		"I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX",
-	}
 
 	t.Run("Marshal 0 (zero)", func(tt *testing.T) {
 		r := Roman{Value: 0}
@@ -30,9 +21,9 @@ func TestMarshalText(t *testing.T) {
 		assert.Error(t, err, ErrInvalid)
 	})
 
-	t.Run("Marshal positive (0-9)", func(tt *testing.T) {
-		for idx, val := range numerals {
-			r := NewRoman(uint16(idx + 1))
+	t.Run("Marshal values", func(tt *testing.T) {
+		for key, val := range values {
+			r := NewRoman(key)
 
 			b, err := r.MarshalText()
 			require.NoError(t, err)
@@ -41,20 +32,34 @@ func TestMarshalText(t *testing.T) {
 		}
 	})
 
-	// TODO: Marshal 10-20
-	// TODO: Marshal 50-60
-	// TODO: Marshal 1000-1010
+	t.Run("Marshal random", func(tt *testing.T) {
+		tests := map[uint16]string{
+			11:   "XI",
+			15:   "XV",
+			27:   "XXVII",
+			1999: "MCMXCIX",
+		}
+
+		for key, val := range tests {
+			r := NewRoman(key)
+
+			b, err := r.MarshalText()
+			require.NoError(t, err)
+
+			assert.Equal(t, val, string(b))
+		}
+	})
 }
 
 func TestUnmarshalText(t *testing.T) {
-	var numerals = []string{
-		"", "I", "II", "III", "IV", "V", "VI", "VII", "VIII", "IX",
-	}
 
 	t.Run("Unmarshal empty string", func(tt *testing.T) {
 		r := NewRoman(0)
+
 		err := r.UnmarshalText([]byte(""))
-		assert.Error(t, err, ErrInvalid)
+		assert.NoError(t, err)
+
+		assert.Equal(t, uint16(0), r.Value)
 	})
 
 	t.Run("Unmarshal out of range", func(tt *testing.T) {
@@ -63,18 +68,31 @@ func TestUnmarshalText(t *testing.T) {
 		assert.Error(t, err, ErrInvalid)
 	})
 
-	t.Run("Marshal positive (1-9)", func(tt *testing.T) {
-		for idx, val := range numerals {
-			r := NewRoman(uint16(idx + 1))
+	t.Run("Unmarshal alphabet", func(tt *testing.T) {
+		for chr, val := range alphabet {
+			r := NewRoman(0)
 
-			err := r.UnmarshalText([]byte(val))
+			err := r.UnmarshalText([]byte{chr})
 			require.NoError(t, err)
 
-			assert.Equal(t, idx, r.Value)
+			assert.Equal(t, val, r.Value)
 		}
 	})
 
-	// TODO: Unmarshal 10-20
-	// TODO: Unmarshal 50-60
-	// TODO: Unmarshal 1000-1010
+	t.Run("Unmarshal random", func(tt *testing.T) {
+		tests := map[string]uint16{
+			"I": 1, "II": 2, "III": 3, "IV": 4, "V": 5, "VI": 6, "VII": 7, "VIII": 8, "IX": 9, "X": 10,
+			"XI": 11, "XIV": 14, "XIIII": 14, "MCMXCIX": 1999,
+		}
+
+		for str, val := range tests {
+			r := NewRoman(0)
+
+			err := r.UnmarshalText([]byte(str))
+			require.NoError(t, err)
+
+			assert.Equal(t, val, r.Value)
+		}
+	})
+
 }

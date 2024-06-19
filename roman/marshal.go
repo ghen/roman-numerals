@@ -9,7 +9,7 @@ import (
 var ErrInvalid = errors.New("invalid value")
 
 var (
-	alphabet = map[uint16]string{
+	values = map[uint16]string{
 		1:    "I",
 		4:    "IV",
 		5:    "V",
@@ -24,20 +24,14 @@ var (
 		900:  "CM",
 		1000: "M",
 	}
-	values = map[string]uint16{
-		"I":  1,
-		"IV": 4,
-		"V":  5,
-		"IX": 9,
-		"X":  10,
-		"XL": 40,
-		"L":  50,
-		"XC": 90,
-		"C":  100,
-		"CD": 400,
-		"D":  500,
-		"CM": 900,
-		"M":  1000,
+	alphabet = map[byte]uint16{
+		'I': 1,
+		'V': 5,
+		'X': 10,
+		'L': 50,
+		'C': 100,
+		'D': 500,
+		'M': 1000,
 	}
 )
 
@@ -55,11 +49,11 @@ func (r *Roman) MarshalText() (text []byte, err error) {
 		seg.Reset()
 
 		for i := uint16(1); i <= val/rng; i += 1 {
-			if str, exist := alphabet[i*rng]; exist {
+			if str, exist := values[i*rng]; exist {
 				seg.Reset()
 				seg.WriteString(str)
 			} else {
-				seg.WriteString(alphabet[rng])
+				seg.WriteString(values[rng])
 			}
 		}
 		buf.Write(seg.Bytes())
@@ -72,5 +66,31 @@ func (r *Roman) MarshalText() (text []byte, err error) {
 // UnmarshalText decodes the UTF-8-encoded text and updates the receiver.
 // Returns [ErrInvalid] if the text can't be parsed into a valid [Roman] value.
 func (r *Roman) UnmarshalText(text []byte) error {
-	return errors.New("not implemented")
+	r.Value = 0
+
+	// NOTE: This method implements general parsing logic flow.
+	//       It does not implement validation. For example, "IVIV" would parse as "4+4 = 8".
+	//
+	//       It would be easy to use separate Regex to validate the overall number structure.
+	//       However, due to time restrictions oif approximately 1Hr on this assignment,
+	//       validation is not covered.
+
+	max := uint16(0)
+	for idx := len(text) - 1; idx >= 0; idx -= 1 {
+		dig := text[idx]
+		if val, exist := alphabet[dig]; !exist {
+			return ErrInvalid
+		} else if val >= max {
+			r.Value += val
+			max = val
+		} else {
+			r.Value -= val
+		}
+
+		if r.Value > MaxValue {
+			return ErrInvalid
+		}
+	}
+
+	return nil
 }
